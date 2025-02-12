@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class Receipt {
     private String id;
 
     @NotBlank
+    @Pattern(regexp = "^[\\w\\s&-]+$", message = "Retailer must only contain alphanumeric characters, spaces, hyphens, and '&'.")
     private String retailer;
 
     @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Invalid date format (YYYY-MM-DD)")
@@ -30,9 +32,12 @@ public class Receipt {
 
     @NotNull
     @Size(min = 1, message = "At least one item is required")
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "receipt")
     private List<Item> items;
 
     @Pattern(regexp = "^\\d+\\.\\d{2}$", message = "Total must be in 'xx.xx' format")
     private String total;
+
+
+
 }
