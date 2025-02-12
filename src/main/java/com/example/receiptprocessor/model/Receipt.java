@@ -14,6 +14,9 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@Table(name = "receipt", uniqueConstraints =
+@UniqueConstraint(columnNames = {"retailer", "purchase_date", "purchase_time"}))
+
 public class Receipt {
 
     @Id
@@ -24,9 +27,11 @@ public class Receipt {
     @Pattern(regexp = "^[\\w\\s&-]+$", message = "Retailer must only contain alphanumeric characters, spaces, hyphens, and '&'.")
     private String retailer;
 
+    @NotBlank
     @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Invalid date format (YYYY-MM-DD)")
     private String purchaseDate;
 
+    @NotBlank
     @Pattern(regexp = "^\\d{2}:\\d{2}$", message = "Invalid time format (HH:MM)")
     private String purchaseTime;
 
