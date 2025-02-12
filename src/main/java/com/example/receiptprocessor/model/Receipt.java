@@ -1,5 +1,6 @@
 package com.example.receiptprocessor.model;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -9,9 +10,15 @@ import lombok.Setter;
 
 import java.util.List;
 
+@Entity
 @Getter
 @Setter
 public class Receipt {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID) // Use UUID as ID
+    private String id;
+
     @NotBlank
     private String retailer;
 
@@ -23,6 +30,7 @@ public class Receipt {
 
     @NotNull
     @Size(min = 1, message = "At least one item is required")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Item> items;
 
     @Pattern(regexp = "^\\d+\\.\\d{2}$", message = "Total must be in 'xx.xx' format")

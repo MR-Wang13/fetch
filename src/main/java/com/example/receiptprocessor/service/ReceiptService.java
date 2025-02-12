@@ -1,34 +1,41 @@
 package com.example.receiptprocessor.service;
 
+import com.example.receiptprocessor.exception.ReceiptNotFoundException;
 import com.example.receiptprocessor.model.Item;
 import com.example.receiptprocessor.model.Receipt;
+import com.example.receiptprocessor.repository.ReceiptRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class ReceiptService {
 
-    private final Map<String, Receipt> receiptStorage = new ConcurrentHashMap<>();
+    private final ReceiptRepository receiptRepository;
+
+    public ReceiptService(ReceiptRepository receiptRepository) {
+        this.receiptRepository = receiptRepository;
+    }
 
     public String storeReceipt(Receipt receipt) {
-        String id = UUID.randomUUID().toString();
-        receiptStorage.put(id, receipt);
-        return id;
+        receipt.setId(UUID.randomUUID().toString());
+        receiptRepository.save(receipt);
+        return receipt.getId();
     }
 
     public int calculatePoints(String id) {
-        Receipt receipt = receiptStorage.get(id);
-        if (receipt == null) {
-            throw new RuntimeException("Receipt not found");
+        Optional<Receipt> receiptOptional = receiptRepository.findById(id);
+        if (receiptOptional.isEmpty()) {
+            throw new ReceiptNotFoundException(id);
         }
 
+        Receipt receipt = receiptOptional.get();
         int points = 0;
+
         points += receipt.getRetailer().replaceAll("[^a-zA-Z0-9]", "").length();
 
         BigDecimal total = new BigDecimal(receipt.getTotal());
