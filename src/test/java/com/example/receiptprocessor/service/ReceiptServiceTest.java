@@ -46,7 +46,7 @@ class ReceiptServiceTest {
     @Test
     void testStoreReceipt() throws Exception {
         Receipt testReceipt = loadReceiptFromJson("testReceipt.json");
-        when(receiptRepository.save(any(Receipt.class))).thenReturn(testReceipt);
+        //when(receiptRepository.save(any(Receipt.class))).thenReturn(testReceipt);
 
         // Now the storeReceipt method returns a ReceiptIdResponse.
         ReceiptIdResponse response = receiptService.storeReceipt(testReceipt);
