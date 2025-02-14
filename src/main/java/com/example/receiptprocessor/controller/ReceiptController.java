@@ -1,5 +1,7 @@
 package com.example.receiptprocessor.controller;
 
+import com.example.receiptprocessor.dto.PointsResponse;
+import com.example.receiptprocessor.dto.ReceiptIdResponse;
 import com.example.receiptprocessor.model.Receipt;
 import com.example.receiptprocessor.service.ReceiptService;
 import jakarta.validation.Valid;
@@ -7,8 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/receipts")
@@ -19,14 +19,12 @@ public class ReceiptController {
     private final ReceiptService receiptService;
 
     @PostMapping("/process")
-    public ResponseEntity<Map<String, String>> processReceipt(@Valid @RequestBody Receipt receipt) {
-        String receiptId = receiptService.storeReceipt(receipt);
-        return ResponseEntity.ok(Map.of("id", receiptId));
+    public ResponseEntity<ReceiptIdResponse> processReceipt(@Valid @RequestBody Receipt receipt) {
+        return ResponseEntity.ok(receiptService.storeReceipt(receipt));
     }
 
     @GetMapping("/{id}/points")
-    public ResponseEntity<Map<String, Integer>> getPoints(@PathVariable String id) {
-        int points = receiptService.calculatePoints(id);
-        return ResponseEntity.ok(Map.of("points", points));
+    public ResponseEntity<PointsResponse> getPoints(@PathVariable String id) {
+        return ResponseEntity.ok(receiptService.calculatePoints(id));
     }
 }
