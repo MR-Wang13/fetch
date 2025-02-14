@@ -1,5 +1,7 @@
 package com.example.receiptprocessor.service;
 
+import com.example.receiptprocessor.dto.PointsResponse;
+import com.example.receiptprocessor.dto.ReceiptIdResponse;
 import com.example.receiptprocessor.model.Receipt;
 import com.example.receiptprocessor.repository.ReceiptRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,9 +48,10 @@ class ReceiptServiceTest {
         Receipt testReceipt = loadReceiptFromJson("testReceipt.json");
         when(receiptRepository.save(any(Receipt.class))).thenReturn(testReceipt);
 
-        String receiptId = receiptService.storeReceipt(testReceipt);
+        // Now the storeReceipt method returns a ReceiptIdResponse.
+        ReceiptIdResponse response = receiptService.storeReceipt(testReceipt);
 
-        Truth.assertThat(receiptId).isNotNull();
+        Truth.assertThat(response.getId()).isNotNull();
         verify(receiptRepository, times(1)).save(testReceipt);
     }
 
@@ -57,9 +60,10 @@ class ReceiptServiceTest {
         Receipt testReceipt = loadReceiptFromJson("testReceipt.json");
         when(receiptRepository.findById(anyString())).thenReturn(Optional.of(testReceipt));
 
-        int points = receiptService.calculatePoints("test-id");
+        // Now calculatePoints returns a PointsResponse.
+        PointsResponse response = receiptService.calculatePoints("test-id");
 
-        Truth.assertThat(points).isGreaterThan(0);
+        Truth.assertThat(response.getPoints()).isGreaterThan(0);
         verify(receiptRepository, times(1)).findById("test-id");
     }
 
@@ -79,8 +83,8 @@ class ReceiptServiceTest {
         Receipt receipt = loadReceiptFromJson("testReceipt_AllRules.json");
         when(receiptRepository.findById("all-rules-id")).thenReturn(Optional.of(receipt));
 
-        int points = receiptService.calculatePoints("all-rules-id");
-        Truth.assertThat(points).isEqualTo(113);
+        PointsResponse response = receiptService.calculatePoints("all-rules-id");
+        Truth.assertThat(response.getPoints()).isEqualTo(113);
         verify(receiptRepository, times(1)).findById("all-rules-id");
     }
 
@@ -89,8 +93,8 @@ class ReceiptServiceTest {
         Receipt receipt = loadReceiptFromJson("testReceipt_NoTimeBonus.json");
         when(receiptRepository.findById("no-time-bonus-id")).thenReturn(Optional.of(receipt));
 
-        int points = receiptService.calculatePoints("no-time-bonus-id");
-        Truth.assertThat(points).isEqualTo(20);
+        PointsResponse response = receiptService.calculatePoints("no-time-bonus-id");
+        Truth.assertThat(response.getPoints()).isEqualTo(20);
         verify(receiptRepository, times(1)).findById("no-time-bonus-id");
     }
 }
