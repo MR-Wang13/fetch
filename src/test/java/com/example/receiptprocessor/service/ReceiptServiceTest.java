@@ -1,19 +1,24 @@
 package com.example.receiptprocessor.service;
 
-import com.example.receiptprocessor.model.Item;
 import com.example.receiptprocessor.model.Receipt;
 import com.example.receiptprocessor.repository.ReceiptRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.truth.Truth;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.List;
+import java.io.InputStream;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class ReceiptServiceTest {
 
@@ -23,57 +28,69 @@ class ReceiptServiceTest {
     @InjectMocks
     private ReceiptService receiptService;
 
-    private Receipt testReceipt;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
+    }
 
-        testReceipt = new Receipt();
-        testReceipt.setRetailer("Target");
-        testReceipt.setPurchaseDate("2022-01-01");
-        testReceipt.setPurchaseTime("13:01");
-        testReceipt.setTotal("35.35");
-
-        Item item1 = new Item();
-        item1.setShortDescription("Mountain Dew 12PK");
-        item1.setPrice("6.49");
-
-        Item item2 = new Item();
-        item2.setShortDescription("Emils Cheese Pizza");
-        item2.setPrice("12.25");
-
-        testReceipt.setItems(List.of(item1, item2));
+    // Helper method to load a Receipt object from a JSON file located in src/test/resources.
+    private Receipt loadReceiptFromJson(String filename) throws Exception {
+        InputStream is = getClass().getClassLoader().getResourceAsStream(filename);
+        return objectMapper.readValue(is, Receipt.class);
     }
 
     @Test
-    void testStoreReceipt() {
+    void testStoreReceipt() throws Exception {
+        Receipt testReceipt = loadReceiptFromJson("testReceipt.json");
         when(receiptRepository.save(any(Receipt.class))).thenReturn(testReceipt);
 
         String receiptId = receiptService.storeReceipt(testReceipt);
 
-        assertNotNull(receiptId);
+        Truth.assertThat(receiptId).isNotNull();
         verify(receiptRepository, times(1)).save(testReceipt);
     }
 
     @Test
-    void testCalculatePoints() {
+    void testCalculatePoints() throws Exception {
+        Receipt testReceipt = loadReceiptFromJson("testReceipt.json");
         when(receiptRepository.findById(anyString())).thenReturn(Optional.of(testReceipt));
 
         int points = receiptService.calculatePoints("test-id");
 
-        assertTrue(points > 0, "Points should be greater than zero");
+        Truth.assertThat(points).isGreaterThan(0);
         verify(receiptRepository, times(1)).findById("test-id");
     }
 
     @Test
-    void testCalculatePoints_ReceiptNotFound() {
+    void testCalculatePoints_ReceiptNotFound() throws Exception {
         when(receiptRepository.findById("invalid-id")).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(RuntimeException.class, () -> {
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             receiptService.calculatePoints("invalid-id");
         });
 
-        assertEquals("Receipt not found", exception.getMessage());
+        Truth.assertThat(exception).hasMessageThat().isEqualTo("Receipt with ID 'invalid-id' not found");
+    }
+
+    @Test
+    void testCalculatePoints_AllRules() throws Exception {
+        Receipt receipt = loadReceiptFromJson("testReceipt_AllRules.json");
+        when(receiptRepository.findById("all-rules-id")).thenReturn(Optional.of(receipt));
+
+        int points = receiptService.calculatePoints("all-rules-id");
+        Truth.assertThat(points).isEqualTo(113);
+        verify(receiptRepository, times(1)).findById("all-rules-id");
+    }
+
+    @Test
+    void testCalculatePoints_NoTimeBonus() throws Exception {
+        Receipt receipt = loadReceiptFromJson("testReceipt_NoTimeBonus.json");
+        when(receiptRepository.findById("no-time-bonus-id")).thenReturn(Optional.of(receipt));
+
+        int points = receiptService.calculatePoints("no-time-bonus-id");
+        Truth.assertThat(points).isEqualTo(20);
+        verify(receiptRepository, times(1)).findById("no-time-bonus-id");
     }
 }
