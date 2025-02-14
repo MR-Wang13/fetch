@@ -47,10 +47,6 @@ public class ReceiptService {
     }
 
     public int calculatePoints(String id) {
-        Optional<Receipt> receiptOptional = receiptRepository.findById(id);
-        if (receiptOptional.isEmpty()) {
-            throw new ReceiptNotFoundException(id);
-        }
 
         Receipt receipt = receiptRepository.findById(id).orElseThrow(() -> new ReceiptNotFoundException(id));
         int points = 0;
