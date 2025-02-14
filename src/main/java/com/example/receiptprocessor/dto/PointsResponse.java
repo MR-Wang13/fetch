@@ -10,6 +10,4 @@ import lombok.Data;
 @AllArgsConstructor
 public class PointsResponse {
     private int points;
-
-
 }

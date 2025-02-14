@@ -10,5 +10,4 @@ import lombok.Data;
 @AllArgsConstructor
 public class ReceiptIdResponse {
     private String id;
-
 }

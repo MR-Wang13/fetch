@@ -46,7 +46,7 @@ class ReceiptServiceTest {
     @Test
     void testStoreReceipt() throws Exception {
         Receipt testReceipt = loadReceiptFromJson("testReceipt.json");
-        when(receiptRepository.save(any(Receipt.class))).thenReturn(testReceipt);
+        //when(receiptRepository.save(any(Receipt.class))).thenReturn(testReceipt);
 
         // Now the storeReceipt method returns a ReceiptIdResponse.
         ReceiptIdResponse response = receiptService.storeReceipt(testReceipt);
@@ -56,7 +56,7 @@ class ReceiptServiceTest {
     }
 
     @Test
-    void testCalculatePoints() throws Exception {
+    void test_CalculatePoints() throws Exception {
         Receipt testReceipt = loadReceiptFromJson("testReceipt.json");
         when(receiptRepository.findById(anyString())).thenReturn(Optional.of(testReceipt));
 
@@ -79,11 +79,15 @@ class ReceiptServiceTest {
     }
 
     @Test
-    void testCalculatePoints_AllRules() throws Exception {
+    void test_CalculatePoints_WhenAllRulesSatisfied_WillReturnExpectedScore() throws Exception {
+        //Arrange
         Receipt receipt = loadReceiptFromJson("testReceipt_AllRules.json");
         when(receiptRepository.findById("all-rules-id")).thenReturn(Optional.of(receipt));
 
+        //Act
         PointsResponse response = receiptService.calculatePoints("all-rules-id");
+
+        //Assert
         Truth.assertThat(response.getPoints()).isEqualTo(113);
         verify(receiptRepository, times(1)).findById("all-rules-id");
     }
