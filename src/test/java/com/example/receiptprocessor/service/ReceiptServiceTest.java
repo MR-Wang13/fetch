@@ -4,97 +4,101 @@ import com.example.receiptprocessor.dto.PointsResponse;
 import com.example.receiptprocessor.dto.ReceiptIdResponse;
 import com.example.receiptprocessor.model.Receipt;
 import com.example.receiptprocessor.repository.ReceiptRepository;
+import com.example.receiptprocessor.util.TestUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.truth.Truth;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.io.InputStream;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
+@ExtendWith(SpringExtension.class)
+@SpringBootTest
+@Transactional // Ensures that each test runs in isolation
 class ReceiptServiceTest {
 
-    @Mock
+    @Autowired
     private ReceiptRepository receiptRepository;
 
-    @InjectMocks
+    @Autowired
     private ReceiptService receiptService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
-    void setUp() throws Exception {
-        MockitoAnnotations.openMocks(this);
-    }
-
-    // Helper method to load a Receipt object from a JSON file located in src/test/resources.
-    private Receipt loadReceiptFromJson(String filename) throws Exception {
-        InputStream is = getClass().getClassLoader().getResourceAsStream(filename);
-        return objectMapper.readValue(is, Receipt.class);
+    void setUp() {
+        // Arrange: Clear database before each test to ensure isolation
+        receiptRepository.deleteAll();
     }
 
     @Test
-    void testStoreReceipt() throws Exception {
-        Receipt testReceipt = loadReceiptFromJson("testReceipt.json");
-        when(receiptRepository.save(any(Receipt.class))).thenReturn(testReceipt);
+    void test_storeReceipt_WithValidReceipt_ReturnsReceiptIdResponse() throws Exception {
+        // Arrange: Load test receipt from JSON
+        Receipt testReceipt = TestUtils.loadJson("testReceipt.json", Receipt.class);
 
-        // Now the storeReceipt method returns a ReceiptIdResponse.
+        // Act: Store the receipt using the service
         ReceiptIdResponse response = receiptService.storeReceipt(testReceipt);
 
+        // Assert: Verify that the receipt ID is not null and the receipt is persisted
         Truth.assertThat(response.getId()).isNotNull();
-        verify(receiptRepository, times(1)).save(testReceipt);
+        Optional<Receipt> storedReceipt = receiptRepository.findById(response.getId());
+        Truth.assertThat(storedReceipt.isPresent()).isTrue();
     }
 
     @Test
-    void testCalculatePoints() throws Exception {
-        Receipt testReceipt = loadReceiptFromJson("testReceipt.json");
-        when(receiptRepository.findById(anyString())).thenReturn(Optional.of(testReceipt));
+    void test_storeReceipt_DuplicateSubmission_ReturnsSameId() throws Exception {
+        // Arrange: Load test receipt from JSON
+        Receipt testReceipt = TestUtils.loadJson("testReceipt.json", Receipt.class);
 
-        // Now calculatePoints returns a PointsResponse.
-        PointsResponse response = receiptService.calculatePoints("test-id");
+        // Act: Store the receipt twice to simulate a duplicate submission
+        ReceiptIdResponse response1 = receiptService.storeReceipt(testReceipt);
+        ReceiptIdResponse response2 = receiptService.storeReceipt(testReceipt);
 
-        Truth.assertThat(response.getPoints()).isGreaterThan(0);
-        verify(receiptRepository, times(1)).findById("test-id");
+        // Assert: Verify that both submissions return the same receipt ID
+        Truth.assertThat(response2.getId()).isEqualTo(response1.getId());
     }
 
     @Test
-    void testCalculatePoints_ReceiptNotFound() throws Exception {
-        when(receiptRepository.findById("invalid-id")).thenReturn(Optional.empty());
+    void test_calculatePoints_WithInvalidReceiptId_ThrowsReceiptNotFoundException() {
+        // Arrange: Use an invalid receipt ID "invalid-id"
 
+        // Act & Assert: Verify that calculating points with an invalid ID throws the expected exception
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             receiptService.calculatePoints("invalid-id");
         });
-
         Truth.assertThat(exception).hasMessageThat().isEqualTo("Receipt with ID 'invalid-id' not found");
     }
 
     @Test
-    void testCalculatePoints_AllRules() throws Exception {
-        Receipt receipt = loadReceiptFromJson("testReceipt_AllRules.json");
-        when(receiptRepository.findById("all-rules-id")).thenReturn(Optional.of(receipt));
+    void test_calculatePoints_MeetAllRules_ReturnExpectedResult() throws Exception {
+        // Arrange: Load a receipt that meets all rules from JSON
+        Receipt receipt = TestUtils.loadJson("testReceipt_AllRules.json", Receipt.class);
 
-        PointsResponse response = receiptService.calculatePoints("all-rules-id");
-        Truth.assertThat(response.getPoints()).isEqualTo(113);
-        verify(receiptRepository, times(1)).findById("all-rules-id");
+        // Act: Store the receipt and then calculate points
+        ReceiptIdResponse response = receiptService.storeReceipt(receipt);
+        PointsResponse pointsResponse = receiptService.calculatePoints(response.getId());
+
+        // Assert: Verify that the calculated points equal the expected result (113)
+        Truth.assertThat(pointsResponse.getPoints()).isEqualTo(113);
     }
 
     @Test
-    void testCalculatePoints_NoTimeBonus() throws Exception {
-        Receipt receipt = loadReceiptFromJson("testReceipt_NoTimeBonus.json");
-        when(receiptRepository.findById("no-time-bonus-id")).thenReturn(Optional.of(receipt));
+    void test_calculatePoints_NoTimeBonus_ReturnExpectedResult() throws Exception {
+        // Arrange: Load a receipt with no time bonus from JSON
+        Receipt receipt = TestUtils.loadJson("testReceipt_NoTimeBonus.json", Receipt.class);
 
-        PointsResponse response = receiptService.calculatePoints("no-time-bonus-id");
-        Truth.assertThat(response.getPoints()).isEqualTo(20);
-        verify(receiptRepository, times(1)).findById("no-time-bonus-id");
+        // Act: Store the receipt and then calculate points
+        ReceiptIdResponse response = receiptService.storeReceipt(receipt);
+        PointsResponse pointsResponse = receiptService.calculatePoints(response.getId());
+
+        // Assert: Verify that the calculated points equal the expected result (20)
+        Truth.assertThat(pointsResponse.getPoints()).isEqualTo(20);
     }
 }
