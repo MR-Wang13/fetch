@@ -32,12 +32,6 @@ class ReceiptServiceTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @BeforeEach
-    void setUp() {
-        // Arrange: Clear database before each test to ensure isolation
-        receiptRepository.deleteAll();
-    }
-
     @Test
     void test_storeReceipt_WithValidReceipt_ReturnsReceiptIdResponse() throws Exception {
         // Arrange: Load test receipt from JSON
