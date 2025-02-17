@@ -81,7 +81,7 @@ These files are used by the unit tests to verify that the business logic works a
 
 A Postman collection is provided to test the API endpoints. You can import the collection into Postman using the following URL:
 
-[Postman Collection - Receipt Processor API](https://api.postman.com/collections/31906088-0206804c-40ea-42b4-b590-1f6f608aba7e?access_key=PMAT-01JM8QGF428FVQ26H3FH4NBVHQ)
+[Postman Collection - Receipt Processor API](https://www.postman.com/wwwwyssss/public/collection/v344um3/fetch?action=share&creator=31906088)
 
 After importing the collection, you can run the test cases to verify the API's functionality.
 
