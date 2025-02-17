@@ -7,7 +7,7 @@ A Spring Boot application that processes receipts and calculates reward points b
 - **Process Receipt:** Accepts a receipt in JSON format, stores it in the database, and prevents duplicate submissions based on retailer, purchase date, and purchase time.
 - **Calculate Points:** Computes reward points from the receipt details using defined business logic.
 - **Response Wrapping:** Uses custom DTOs (`ReceiptIdResponse` and `PointsResponse`) to standardize API responses.
-- **Testing:** Unit tests for the service and controller layers using JUnit and Google Truth.
+- **Testing:** Unit tests for the service and controller layers using JUnit and Google Truth, with JSON test cases stored in `src/test/resources`.
 - **Docker:** Multi-stage Dockerfile for building and running the application in a container.
 
 ## Prerequisites
@@ -56,16 +56,40 @@ java -jar target/receipt-processor-<version>.jar
 
 The application will run on port **8080** by default.
 
-### API Endpoints
+## API Endpoints
 
 - **Process Receipt**
-    - **Endpoint:** `POST /receipts/process`
-    - **Request Body:** A JSON object representing a receipt.
-    - **Response:** A JSON object with the property `"id"` containing the receipt ID.
+  - **Endpoint:** `POST /receipts/process`
+  - **Request Body:** A JSON object representing a receipt.
+  - **Response:** A JSON object with the property `"id"` containing the receipt ID.
 
 - **Calculate Points**
-    - **Endpoint:** `GET /receipts/{id}/points`
-    - **Response:** A JSON object with the property `"points"` containing the calculated reward points.
+  - **Endpoint:** `GET /receipts/{id}/points`
+  - **Response:** A JSON object with the property `"points"` containing the calculated reward points.
+
+## JSON Test Cases
+
+Several JSON test case files are included in the `src/test/resources` directory to simulate different scenarios for unit testing:
+
+- **testReceipt.json:** A basic receipt for standard testing.
+- **testReceipt_AllRules.json:** A receipt that triggers all reward point rules (expected points: 113).
+- **testReceipt_NoTimeBonus.json:** A receipt that does not qualify for the time bonus rule (expected points: 20).
+
+These files are used by the unit tests to verify that the business logic works as expected.
+
+## Postman Test Cases
+
+A Postman collection is provided to test the API endpoints. You can import the collection into Postman using the following URL:
+
+[Postman Collection - Receipt Processor API](https://api.postman.com/collections/31906088-0206804c-40ea-42b4-b590-1f6f608aba7e?access_key=PMAT-01JM8QGF428FVQ26H3FH4NBVHQ)
+
+After importing the collection, you can run the test cases to verify the API's functionality.
+
+## Deployed Application
+
+You can test the deployed version of the application at the following URL:
+
+[http://receiptprocessor-env.eba-t22vhcxy.us-east-1.elasticbeanstalk.com/](http://receiptprocessor-env.eba-t22vhcxy.us-east-1.elasticbeanstalk.com/)
 
 ## Testing
 
@@ -77,7 +101,7 @@ Run the tests using Maven:
 mvn test
 ```
 
-Test cases are written for both the service and controller layers. They use Google Truth for assertions and load test data from JSON files located in `src/test/resources`.
+Test cases are written for both the service and controller layers using JUnit and Google Truth. The tests use the JSON files in `src/test/resources` to simulate various input scenarios.
 
 ## Docker
 
