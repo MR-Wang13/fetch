@@ -42,8 +42,10 @@ public class ReceiptService {
         }
 
         // Set up bi-directional relationship: assign the receipt to each item.
-        for (Item item : receipt.getItems()) {
-            item.setReceipt(receipt);
+        if (receipt.getItems() != null) {
+            for (Item item : receipt.getItems()) {
+                item.setReceipt(receipt);
+            }
         }
         String id = receiptRepository.save(receipt).getId();
         return new ReceiptIdResponse(id);

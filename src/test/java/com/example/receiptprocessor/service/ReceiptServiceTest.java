@@ -5,9 +5,7 @@ import com.example.receiptprocessor.dto.ReceiptIdResponse;
 import com.example.receiptprocessor.model.Receipt;
 import com.example.receiptprocessor.repository.ReceiptRepository;
 import com.example.receiptprocessor.util.TestUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.truth.Truth;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,9 +27,7 @@ class ReceiptServiceTest {
 
     @Autowired
     private ReceiptService receiptService;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
+    
     @Test
     void test_storeReceipt_WithValidReceipt_ReturnsReceiptIdResponse() throws Exception {
         // Arrange: Load test receipt from JSON
