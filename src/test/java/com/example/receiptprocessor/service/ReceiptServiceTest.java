@@ -30,8 +30,6 @@ class ReceiptServiceTest {
     @Autowired
     private ReceiptService receiptService;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     @Test
     void test_storeReceipt_WithValidReceipt_ReturnsReceiptIdResponse() throws Exception {
         // Arrange: Load test receipt from JSON
