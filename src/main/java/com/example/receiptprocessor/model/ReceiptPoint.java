@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Entity
@@ -13,7 +14,7 @@ public class ReceiptPoint {
     @Id
     private String receipt_id;
 
-    @NotBlank
+    @NotNull
     private Integer points;
 
 }
