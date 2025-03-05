@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface ReceiptRepository extends JpaRepository<Receipt, String> {
     Optional<Receipt> findByRetailerAndPurchaseDateAndPurchaseTime(String retailer, String purchaseDate, String purchaseTime);
 
+    long countByUserId(String userId);
+
 }

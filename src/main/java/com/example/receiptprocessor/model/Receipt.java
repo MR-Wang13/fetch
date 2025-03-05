@@ -43,6 +43,8 @@ public class Receipt {
     @Pattern(regexp = "^\\d+\\.\\d{2}$", message = "Total must be in 'xx.xx' format")
     private String total;
 
+    @NotBlank
+    private String userId;
 
 
 }
