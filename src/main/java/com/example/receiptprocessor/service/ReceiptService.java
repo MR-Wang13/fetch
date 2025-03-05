@@ -1,5 +1,7 @@
 package com.example.receiptprocessor.service;
 
+import com.example.receiptprocessor.dto.BonusCalculationRequest;
+import com.example.receiptprocessor.dto.PointsCalculationRequest;
 import com.example.receiptprocessor.dto.PointsResponse;
 import com.example.receiptprocessor.dto.ReceiptIdResponse;
 import com.example.receiptprocessor.exception.ReceiptNotFoundException;
@@ -50,8 +52,15 @@ public class ReceiptService {
             item.setReceipt(receipt);
         }
         Receipt savedReceipt = receiptRepository.save(receipt);
-        // Calculate points using the business logic encapsulated in PointsCalculator.
-        int points = PointsCalculator.calculatePoints(receipt);
+
+        // get receipt number of current user
+        long receiptCount = receiptRepository.countByUserId(receipt.getUserId());
+
+        // create PointsCalculationRequest, Calculate points using the business logic encapsulated in PointsCalculator.
+        PointsCalculationRequest request = new PointsCalculationRequest();
+        request.setReceipt(savedReceipt);
+        request.setBonusCalculationRequest(new BonusCalculationRequest(receiptCount));
+        int points = PointsCalculator.calculatePoints(request);
 
         // store the points into table (receipt_point)
         ReceiptPoint receiptPoint = new ReceiptPoint();

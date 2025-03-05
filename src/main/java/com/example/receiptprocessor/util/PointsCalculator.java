@@ -1,5 +1,7 @@
 package com.example.receiptprocessor.util;
 
+import com.example.receiptprocessor.dto.BonusCalculationRequest;
+import com.example.receiptprocessor.dto.PointsCalculationRequest;
 import com.example.receiptprocessor.model.Item;
 import com.example.receiptprocessor.model.Receipt;
 
@@ -14,12 +16,43 @@ public class PointsCalculator {
     private static final int MULTIPLE_OF_QUARTER_POINTS = 25;
 
     /**
+     * calculate total points include base point and bonus points
+     *
+     * @param request receipt
+     * @return total points
+     */
+    public static int calculatePoints(PointsCalculationRequest request) {
+        return calculateBasePoints(request.getReceipt()) + calculateBonusPoints(request.getBonusCalculationRequest());
+    }
+
+    /**
+     * calculate bonus points
+     *
+     * @param request BonusCalculationRequest
+     * @return bonus points
+     */
+    public static int calculateBonusPoints(BonusCalculationRequest request) {
+        int bonusPoints = 0;
+        long receiptCount = request.getReceiptCount();
+        //1000 points for the first receipt,
+        //500 points for the second receipt and 250 points for the third receipt.
+        if (receiptCount == 1) {
+            bonusPoints = 1000;
+        } else if (receiptCount == 2) {
+            bonusPoints = 500;
+        } else if (receiptCount == 3) {
+            bonusPoints = 250;
+        }
+        return bonusPoints;
+    }
+
+    /**
      * Pure function that calculates points from a given Receipt.
      *
      * @param receipt the receipt object
      * @return the calculated points
      */
-    public static int calculatePoints(Receipt receipt) {
+    public static int calculateBasePoints(Receipt receipt) {
         int points = 0;
 
         // 1. Retailer name: 1 point for every alphanumeric character.
