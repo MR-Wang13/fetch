@@ -5,6 +5,8 @@ import com.example.receiptprocessor.dto.ReceiptIdResponse;
 import com.example.receiptprocessor.exception.ReceiptNotFoundException;
 import com.example.receiptprocessor.model.Item;
 import com.example.receiptprocessor.model.Receipt;
+import com.example.receiptprocessor.model.ReceiptPoint;
+import com.example.receiptprocessor.repository.ReceiptPointRepository;
 import com.example.receiptprocessor.repository.ReceiptRepository;
 import com.example.receiptprocessor.util.PointsCalculator;
 import jakarta.transaction.Transactional;
@@ -20,8 +22,11 @@ public class ReceiptService {
     private static final Logger logger = LoggerFactory.getLogger(ReceiptService.class);
     private final ReceiptRepository receiptRepository;
 
-    public ReceiptService(ReceiptRepository receiptRepository) {
+    private final ReceiptPointRepository receiptPointRepository;
+
+    public ReceiptService(ReceiptRepository receiptRepository, ReceiptPointRepository receiptPointRepository) {
         this.receiptRepository = receiptRepository;
+        this.receiptPointRepository = receiptPointRepository;
     }
 
     /**
@@ -40,29 +45,31 @@ public class ReceiptService {
                     receipt.getRetailer(), receipt.getPurchaseDate(), receipt.getPurchaseTime(), existingReceipt.get().getId());
             return new ReceiptIdResponse(existingReceipt.get().getId());
         }
-
         // Set up bi-directional relationship: assign the receipt to each item.
         for (Item item : receipt.getItems()) {
             item.setReceipt(receipt);
         }
-        String id = receiptRepository.save(receipt).getId();
-        return new ReceiptIdResponse(id);
+        Receipt savedReceipt = receiptRepository.save(receipt);
+        // Calculate points using the business logic encapsulated in PointsCalculator.
+        int points = PointsCalculator.calculatePoints(receipt);
+
+        // store the points into table (receipt_point)
+        ReceiptPoint receiptPoint = new ReceiptPoint();
+        receiptPoint.setReceipt_id(savedReceipt.getId());
+        receiptPoint.setPoints(points);
+        receiptPointRepository.save(receiptPoint);
+        return new ReceiptIdResponse(savedReceipt.getId());
     }
 
     /**
-     * Calculates points for a given receipt ID and returns a response object containing the points.
+     * get the points by user_id from ReceiptPoint
      *
      */
     public PointsResponse calculatePoints(String id) {
         // Retrieve the receipt by ID or throw an exception if not found.
-        Receipt receipt = receiptRepository.findById(id)
+        ReceiptPoint receiptPoint = receiptPointRepository.findById(id)
                 .orElseThrow(() -> new ReceiptNotFoundException(id));
-        logger.debug("Starting point calculation for receipt [{}]", id);
-
-        // Calculate points using the business logic encapsulated in PointsCalculator.
-        int points = PointsCalculator.calculatePoints(receipt);
-
-        logger.debug("Final points for receipt [{}]: {}", id, points);
-        return new PointsResponse(points);
+        logger.debug("Return receipt [{}]'s points: {}", id, receiptPoint.getPoints());
+        return new PointsResponse(receiptPoint.getPoints());
     }
 }
